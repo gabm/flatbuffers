@@ -25,7 +25,7 @@ function(flatbuffers_generate_cpp)
         
     # prepare header output folder
     if (PARSED_ARGS_HEADER_OUTPUT_FOLDER)
-        set(HEADER_OUTPUT_FOLDER ${PARSED_ARGS_HEADER_FOLDER})
+        set(HEADER_OUTPUT_FOLDER ${PARSED_ARGS_HEADER_OUTPUT_FOLDER})
     else()
         set(HEADER_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/flatc_headers)
     endif()
