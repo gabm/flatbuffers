@@ -29,7 +29,6 @@ function(flatbuffers_generate_cpp)
     else()
         set(HEADER_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/flatc_headers)
     endif()
-    file(MAKE_DIRECTORY ${HEADER_OUTPUT_FOLDER})
     
     # prepare bfbs output folder
     if (PARSED_ARGS_BFBS_OUTPUT_FOLDER)
@@ -37,7 +36,6 @@ function(flatbuffers_generate_cpp)
     else()
         set(BFBS_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/flatc_bfbs)
     endif()
-    file(MAKE_DIRECTORY ${BFBS_OUTPUT_FOLDER})
 
     
     # set output folder
@@ -50,9 +48,12 @@ function(flatbuffers_generate_cpp)
     endforeach()
     
     # export results
-    set(FLATBUFFERS_GENERATED_SOURCES ${HEADER_FILES} PARENT_SCOPE)
-    set(FLATBUFFERS_GENERATED_INCLUDE_DIRS ${HEADER_OUTPUT_FOLDER} PARENT_SCOPE)
-    set(FLATBUFFERS_GENERATED_BFBS ${BFBS_FILES} PARENT_SCOPE)
+    list(APPEND FLATBUFFERS_GENERATED_SOURCES ${HEADER_FILES})
+    set(FLATBUFFERS_GENERATED_SOURCES ${FLATBUFFERS_GENERATED_SOURCES} PARENT_SCOPE)
+    list(APPEND FLATBUFFERS_GENERATED_INCLUDE_DIRS ${HEADER_OUTPUT_FOLDER})
+    set(FLATBUFFERS_GENERATED_INCLUDE_DIRS ${FLATBUFFERS_GENERATED_INCLUDE_DIRS} PARENT_SCOPE)
+    list(APPEND FLATBUFFERS_GENERATED_BFBS ${BFBS_FILES})
+    set(FLATBUFFERS_GENERATED_BFBS ${FLATBUFFERS_GENERATED_BFBS} PARENT_SCOPE)
 endfunction()
 
 function(_flatbuffers_generate_single_cpp HEADER_FILE_OUT BFBS_FILE_OUT HEADER_FOLDER BFBS_FOLDER TMP_FOLDER INPUT_FILE)
@@ -73,6 +74,7 @@ function(_flatbuffers_generate_single_cpp HEADER_FILE_OUT BFBS_FILE_OUT HEADER_F
     add_custom_command(
             OUTPUT "${FINAL_GENERATED_HDR}" "${FINAL_GENERATED_BFBS}"
             COMMAND  flatc -b --schema --cpp --gen-object-api -o ${TMP_FOLDER} ${INPUT_FILE_ABS}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${HEADER_FOLDER} ${BFBS_FOLDER}
             COMMAND ${CMAKE_COMMAND} -E rename ${TMP_GENERATED_HDR} ${FINAL_GENERATED_HDR}
             COMMAND ${CMAKE_COMMAND} -E rename ${TMP_GENERATED_BFBS} ${FINAL_GENERATED_BFBS}
             DEPENDS ${INPUT_FILE_ABS}
