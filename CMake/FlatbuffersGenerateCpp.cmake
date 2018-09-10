@@ -12,46 +12,78 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+include(CMakeParseArguments)
 
-function(flatbuffers_generate_cpp OUTPUT_FOLDER GENERATED_SRCS)    
-    # set output folder
-    set(THIS_OUTPUT_FOLDER ${CMAKE_CURRENT_BINARY_DIR}/flatc_generated)
-    file(MAKE_DIRECTORY ${OUTPUT_FOLDER})
+function(flatbuffers_generate_cpp)
+    cmake_parse_arguments(
+        PARSED_ARGS # prefix
+        "" # boolean
+        "HEADER_FOLDER;BFBS_FOLDER" # single value
+        "FBS_FILES" # multi-value
+        ${ARGN} # parser input
+    )
+        
+    # prepare header output folder
+    if (PARSED_ARGS_HEADER_FOLDER)
+        set(HEADER_FOLDER ${PARSED_ARGS_HEADER_FOLDER})
+    else()
+        set(HEADER_FOLDER ${CMAKE_BINARY_DIR}/flatc_headers)
+    endif()
+    file(MAKE_DIRECTORY ${HEADER_FOLDER})
     
-    foreach(INPUT_FILE ${ARGN})
-        flatbuffers_generate_single_cpp(SRC ${THIS_OUTPUT_FOLDER} ${INPUT_FILE})
-        list(APPEND SRCS ${SRC})
-    endforeach()
+    # prepare bfbs output folder
+    if (PARSED_ARGS_BFBS_FOLDER)
+        set(BFBS_FOLDER ${PARSED_ARGS_BFBS_FOLDER})
+    else()
+        set(BFBS_FOLDER ${CMAKE_BINARY_DIR}/flatc_bfbs)
+    endif()
+    file(MAKE_DIRECTORY ${BFBS_FOLDER})
 
-    set(${GENERATED_SRCS} ${SRCS} PARENT_SCOPE)
-    set(${OUTPUT_FOLDER} ${THIS_OUTPUT_FOLDER} PARENT_SCOPE)
+    
+    # set output folder
+    set(TMP_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/tmp)
+    
+    foreach(INPUT_FILE ${PARSED_ARGS_FBS_FILES})
+        _flatbuffers_generate_single_cpp(HEADER_FILE BFBS_FILE ${HEADER_FOLDER} ${BFBS_FOLDER} ${TMP_OUTPUT_FOLDER} ${INPUT_FILE})
+        list(APPEND HEADER_FILES ${HEADER_FILE})
+        list(APPEND BFBS_FILES ${BFBS_FILE})
+    endforeach()
+    
+    # export results
+    set(FLATBUFFERS_GENERATED_SOURCES ${HEADER_FILES} PARENT_SCOPE)
+    set(FLATBUFFERS_GENERATED_INCLUDE_DIRS ${HEADER_FOLDER} PARENT_SCOPE)
+    set(FLATBUFFERS_GENERATED_BFBS ${BFBS_FILES} PARENT_SCOPE)
 endfunction()
 
-function(flatbuffers_generate_single_cpp SRC OUTPUT_FOLDER INPUT_FILE)
+function(_flatbuffers_generate_single_cpp HEADER_FILE_OUT BFBS_FILE_OUT HEADER_FOLDER BFBS_FOLDER TMP_FOLDER INPUT_FILE)
     # get absolute fbs filename
     get_filename_component(INPUT_FILE_ABS ${INPUT_FILE} ABSOLUTE)
     
     # get pure fbs filename without extensions
     get_filename_component(FBS_FILE_WE ${INPUT_FILE} NAME_WE)
     
-    
     # set generated filenames
-    set(GENERATED_HDR ${OUTPUT_FOLDER}/${FBS_FILE_WE}_generated.h)
-    set(GENERATED_BFBS ${OUTPUT_FOLDER}/${FBS_FILE_WE}.bfbs)
+    set(TMP_GENERATED_HDR ${TMP_FOLDER}/${FBS_FILE_WE}_generated.h)
+    set(TMP_GENERATED_BFBS ${TMP_FOLDER}/${FBS_FILE_WE}.bfbs)
+    
+    set(FINAL_GENERATED_HDR ${HEADER_FOLDER}/${FBS_FILE_WE}_generated.h)
+    set(FINAL_GENERATED_BFBS ${BFBS_FOLDER}/${FBS_FILE_WE}.bfbs)
     
     # command to generate
     add_custom_command(
-            OUTPUT "${GENERATED_HDR}" "${GENERATED_BFBS}"
-            COMMAND  flatc
-            ARGS -b --schema --cpp --gen-object-api -o ${OUTPUT_FOLDER} ${INPUT_FILE_ABS}
+            OUTPUT "${FINAL_GENERATED_HDR}" "${FINAL_GENERATED_BFBS}"
+            COMMAND  flatc -b --schema --cpp --gen-object-api -o ${TMP_FOLDER} ${INPUT_FILE_ABS}
+            COMMAND ${CMAKE_COMMAND} -E rename ${TMP_GENERATED_HDR} ${FINAL_GENERATED_HDR}
+            COMMAND ${CMAKE_COMMAND} -E rename ${TMP_GENERATED_BFBS} ${FINAL_GENERATED_BFBS}
             DEPENDS ${INPUT_FILE_ABS}
             COMMENT "Running C++ flatbuffers buffer compiler on ${INPUT_FILE}"
             VERBATIM )
     
     # set source file propterty
-    set_source_files_properties(${GENERATED_HDR} PROPERTIES GENERATED TRUE)
-    
-    # return generated files
-    set(${SRC} ${GENERATED_HDR} PARENT_SCOPE)
-endfunction()
+    set_source_files_properties(${FINAL_GENERATED_HDR} PROPERTIES GENERATED TRUE)
+    set_source_files_properties(${FINAL_GENERATED_BFBS} PROPERTIES GENERATED TRUE)
 
+    # return generated files
+    set(${HEADER_FILE_OUT} ${FINAL_GENERATED_HDR} PARENT_SCOPE)
+    set(${BFBS_FILE_OUT} ${FINAL_GENERATED_BFBS} PARENT_SCOPE)
+endfunction()
