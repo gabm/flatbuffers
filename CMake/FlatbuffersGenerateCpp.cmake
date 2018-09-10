@@ -13,27 +13,27 @@
 # limitations under the License.
 
 
-function(flatbuffers_generate_cpp GENERATED_SRCS)    
+function(flatbuffers_generate_cpp OUTPUT_FOLDER GENERATED_SRCS)    
+    # set output folder
+    set(THIS_OUTPUT_FOLDER ${CMAKE_CURRENT_BINARY_DIR}/flatc_generated)
+    file(MAKE_DIRECTORY ${OUTPUT_FOLDER})
+    
     foreach(INPUT_FILE ${ARGN})
-        flatbuffers_generate_single_cpp(SRC ${INPUT_FILE})
+        flatbuffers_generate_single_cpp(SRC ${THIS_OUTPUT_FOLDER} ${INPUT_FILE})
         list(APPEND SRCS ${SRC})
     endforeach()
 
     set(${GENERATED_SRCS} ${SRCS} PARENT_SCOPE)
+    set(${OUTPUT_FOLDER} ${THIS_OUTPUT_FOLDER} PARENT_SCOPE)
 endfunction()
 
-function(flatbuffers_generate_single_cpp SRC INPUT_FILE)
+function(flatbuffers_generate_single_cpp SRC OUTPUT_FOLDER INPUT_FILE)
     # get absolute fbs filename
     get_filename_component(INPUT_FILE_ABS ${INPUT_FILE} ABSOLUTE)
     
     # get pure fbs filename without extensions
     get_filename_component(FBS_FILE_WE ${INPUT_FILE} NAME_WE)
     
-    # set tmp output folder
-    set(OUTPUT_FOLDER ${CMAKE_CURRENT_BINARY_DIR}/flatc_generated)
-    
-    # make output folders
-    file(MAKE_DIRECTORY ${OUTPUT_FOLDER})
     
     # set generated filenames
     set(GENERATED_HDR ${OUTPUT_FOLDER}/${FBS_FILE_WE}_generated.h)
