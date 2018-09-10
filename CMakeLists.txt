@@ -283,7 +283,7 @@ if(FLATBUFFERS_INSTALL)
 
   configure_file(CMake/FlatbuffersConfigVersion.cmake.in FlatbuffersConfigVersion.cmake @ONLY)
   install(
-      FILES "CMake/FlatbuffersConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/FlatbuffersConfigVersion.cmake"
+      FILES "CMake/FlatbuffersConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/FlatbuffersConfigVersion.cmake" "CMake/FlatbuffersGenerateCpp.cmake"
       DESTINATION ${FB_CMAKE_DIR}
   )
 
