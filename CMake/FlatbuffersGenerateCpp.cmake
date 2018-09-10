@@ -18,40 +18,40 @@ function(flatbuffers_generate_cpp)
     cmake_parse_arguments(
         PARSED_ARGS # prefix
         "" # boolean
-        "HEADER_FOLDER;BFBS_FOLDER" # single value
-        "FBS_FILES" # multi-value
+        "HEADER_OUTPUT_FOLDER;BFBS_OUTPUT_FOLDER" # single value
+        "INPUT_FILES" # multi-value
         ${ARGN} # parser input
     )
         
     # prepare header output folder
-    if (PARSED_ARGS_HEADER_FOLDER)
-        set(HEADER_FOLDER ${PARSED_ARGS_HEADER_FOLDER})
+    if (PARSED_ARGS_HEADER_OUTPUT_FOLDER)
+        set(HEADER_OUTPUT_FOLDER ${PARSED_ARGS_HEADER_FOLDER})
     else()
-        set(HEADER_FOLDER ${CMAKE_BINARY_DIR}/flatc_headers)
+        set(HEADER_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/flatc_headers)
     endif()
-    file(MAKE_DIRECTORY ${HEADER_FOLDER})
+    file(MAKE_DIRECTORY ${HEADER_OUTPUT_FOLDER})
     
     # prepare bfbs output folder
-    if (PARSED_ARGS_BFBS_FOLDER)
-        set(BFBS_FOLDER ${PARSED_ARGS_BFBS_FOLDER})
+    if (PARSED_ARGS_BFBS_OUTPUT_FOLDER)
+        set(BFBS_OUTPUT_FOLDER ${PARSED_ARGS_BFBS_OUTPUT_FOLDER})
     else()
-        set(BFBS_FOLDER ${CMAKE_BINARY_DIR}/flatc_bfbs)
+        set(BFBS_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/flatc_bfbs)
     endif()
-    file(MAKE_DIRECTORY ${BFBS_FOLDER})
+    file(MAKE_DIRECTORY ${BFBS_OUTPUT_FOLDER})
 
     
     # set output folder
     set(TMP_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/tmp)
     
-    foreach(INPUT_FILE ${PARSED_ARGS_FBS_FILES})
-        _flatbuffers_generate_single_cpp(HEADER_FILE BFBS_FILE ${HEADER_FOLDER} ${BFBS_FOLDER} ${TMP_OUTPUT_FOLDER} ${INPUT_FILE})
+    foreach(INPUT_FILE ${PARSED_ARGS_INPUT_FILES})
+        _flatbuffers_generate_single_cpp(HEADER_FILE BFBS_FILE ${HEADER_OUTPUT_FOLDER} ${BFBS_OUTPUT_FOLDER} ${TMP_OUTPUT_FOLDER} ${INPUT_FILE})
         list(APPEND HEADER_FILES ${HEADER_FILE})
         list(APPEND BFBS_FILES ${BFBS_FILE})
     endforeach()
     
     # export results
     set(FLATBUFFERS_GENERATED_SOURCES ${HEADER_FILES} PARENT_SCOPE)
-    set(FLATBUFFERS_GENERATED_INCLUDE_DIRS ${HEADER_FOLDER} PARENT_SCOPE)
+    set(FLATBUFFERS_GENERATED_INCLUDE_DIRS ${HEADER_OUTPUT_FOLDER} PARENT_SCOPE)
     set(FLATBUFFERS_GENERATED_BFBS ${BFBS_FILES} PARENT_SCOPE)
 endfunction()
 
