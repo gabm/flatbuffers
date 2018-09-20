@@ -73,7 +73,7 @@ function(_flatc_generate_single_cpp HEADER_FILE_OUT BFBS_FILE_OUT HEADER_FOLDER 
     # command to generate
     add_custom_command(
             OUTPUT "${FINAL_GENERATED_HDR}" "${FINAL_GENERATED_BFBS}"
-            COMMAND  flatc -b --schema --cpp --gen-object-api -o ${TMP_FOLDER} ${INPUT_FILE_ABS}
+            COMMAND $<TARGET_FILE:flatbuffers::flatc> -b --schema --cpp --gen-object-api -o ${TMP_FOLDER} ${INPUT_FILE_ABS}
             COMMAND ${CMAKE_COMMAND} -E make_directory ${HEADER_FOLDER} ${BFBS_FOLDER}
             COMMAND ${CMAKE_COMMAND} -E rename ${TMP_GENERATED_HDR} ${FINAL_GENERATED_HDR}
             COMMAND ${CMAKE_COMMAND} -E rename ${TMP_GENERATED_BFBS} ${FINAL_GENERATED_BFBS}
