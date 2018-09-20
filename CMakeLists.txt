@@ -283,7 +283,7 @@ if(FLATBUFFERS_INSTALL)
 
   configure_file(CMake/FlatbuffersConfigVersion.cmake.in FlatbuffersConfigVersion.cmake @ONLY)
   install(
-      FILES "CMake/FlatbuffersConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/FlatbuffersConfigVersion.cmake" "CMake/FlatbuffersGenerateCpp.cmake"
+      FILES "CMake/FlatbuffersConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/FlatbuffersConfigVersion.cmake"
       DESTINATION ${FB_CMAKE_DIR}
   )
 
@@ -321,6 +321,12 @@ if(FLATBUFFERS_INSTALL)
       NAMESPACE flatbuffers::
       DESTINATION ${FB_CMAKE_DIR}
       CONFIGURATIONS Release
+    )
+
+    configure_file(CMake/FlatcConfigVersion.cmake.in FlatcConfigVersion.cmake @ONLY)
+    install(
+      FILES "CMake/FlatcConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/FlatcConfigVersion.cmake" "CMake/FlatcGenerateCpp.cmake"
+      DESTINATION ${FB_CMAKE_DIR}
     )
   endif()
 
