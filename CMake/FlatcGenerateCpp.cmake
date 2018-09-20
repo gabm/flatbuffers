@@ -14,7 +14,7 @@
 
 include(CMakeParseArguments)
 
-function(flatbuffers_generate_cpp)
+function(flatc_generate_cpp)
     cmake_parse_arguments(
         PARSED_ARGS # prefix
         "" # boolean
@@ -42,7 +42,7 @@ function(flatbuffers_generate_cpp)
     set(TMP_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/tmp)
     
     foreach(INPUT_FILE ${PARSED_ARGS_INPUT_FILES})
-        _flatbuffers_generate_single_cpp(HEADER_FILE BFBS_FILE ${HEADER_OUTPUT_FOLDER} ${BFBS_OUTPUT_FOLDER} ${TMP_OUTPUT_FOLDER} ${INPUT_FILE})
+        _flatc_generate_single_cpp(HEADER_FILE BFBS_FILE ${HEADER_OUTPUT_FOLDER} ${BFBS_OUTPUT_FOLDER} ${TMP_OUTPUT_FOLDER} ${INPUT_FILE})
         list(APPEND HEADER_FILES ${HEADER_FILE})
         list(APPEND BFBS_FILES ${BFBS_FILE})
     endforeach()
@@ -56,7 +56,7 @@ function(flatbuffers_generate_cpp)
     set(FLATBUFFERS_GENERATED_BFBS ${FLATBUFFERS_GENERATED_BFBS} PARENT_SCOPE)
 endfunction()
 
-function(_flatbuffers_generate_single_cpp HEADER_FILE_OUT BFBS_FILE_OUT HEADER_FOLDER BFBS_FOLDER TMP_FOLDER INPUT_FILE)
+function(_flatc_generate_single_cpp HEADER_FILE_OUT BFBS_FILE_OUT HEADER_FOLDER BFBS_FOLDER TMP_FOLDER INPUT_FILE)
     # get absolute fbs filename
     get_filename_component(INPUT_FILE_ABS ${INPUT_FILE} ABSOLUTE)
     
@@ -78,7 +78,7 @@ function(_flatbuffers_generate_single_cpp HEADER_FILE_OUT BFBS_FILE_OUT HEADER_F
             COMMAND ${CMAKE_COMMAND} -E rename ${TMP_GENERATED_HDR} ${FINAL_GENERATED_HDR}
             COMMAND ${CMAKE_COMMAND} -E rename ${TMP_GENERATED_BFBS} ${FINAL_GENERATED_BFBS}
             DEPENDS ${INPUT_FILE_ABS}
-            COMMENT "Running C++ flatbuffers buffer compiler on ${INPUT_FILE}"
+            COMMENT "Running C++ flatc compiler on ${INPUT_FILE}"
             VERBATIM )
     
     # set source file propterty
