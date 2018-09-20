@@ -315,18 +315,19 @@ if(FLATBUFFERS_INSTALL)
       CONFIGURATIONS Release
     )
 
+    set(FC_CMAKE_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/flatc")
     install(
       EXPORT FlatcTargets
       FILE FlatcTargets.cmake
       NAMESPACE flatbuffers::
-      DESTINATION ${FB_CMAKE_DIR}
+      DESTINATION ${FC_CMAKE_DIR}
       CONFIGURATIONS Release
     )
 
     configure_file(CMake/FlatcConfigVersion.cmake.in FlatcConfigVersion.cmake @ONLY)
     install(
       FILES "CMake/FlatcConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/FlatcConfigVersion.cmake" "CMake/FlatcGenerateCpp.cmake"
-      DESTINATION ${FB_CMAKE_DIR}
+      DESTINATION ${FC_CMAKE_DIR}
     )
   endif()
 
