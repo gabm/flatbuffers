@@ -19,10 +19,10 @@ function(flatc_generate_cpp)
         PARSED_ARGS # prefix
         "" # boolean
         "HEADER_OUTPUT_FOLDER;BFBS_OUTPUT_FOLDER" # single value
-        "INPUT_FILES" # multi-value
+        "INPUT_FILES;INCLUDE_PATHS" # multi-value
         ${ARGN} # parser input
     )
-        
+            
     # prepare header output folder
     if (PARSED_ARGS_HEADER_OUTPUT_FOLDER)
         set(HEADER_OUTPUT_FOLDER ${PARSED_ARGS_HEADER_OUTPUT_FOLDER})
@@ -36,13 +36,17 @@ function(flatc_generate_cpp)
     else()
         set(BFBS_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/flatc_bfbs)
     endif()
-
+        
+    # prepare include paths
+    if (PARSED_ARGS_INCLUDE_PATHS)
+        set(INCLUDE_PATHS ${PARSED_ARGS_INCLUDE_PATHS})
+    endif()
     
     # set output folder
     set(TMP_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/tmp)
     
     foreach(INPUT_FILE ${PARSED_ARGS_INPUT_FILES})
-        _flatc_generate_single_cpp(HEADER_FILE BFBS_FILE ${HEADER_OUTPUT_FOLDER} ${BFBS_OUTPUT_FOLDER} ${TMP_OUTPUT_FOLDER} ${INPUT_FILE})
+        _flatc_generate_single_cpp(HEADER_FILE BFBS_FILE "${INCLUDE_PATHS}" ${HEADER_OUTPUT_FOLDER} ${BFBS_OUTPUT_FOLDER} ${TMP_OUTPUT_FOLDER} ${INPUT_FILE})
         list(APPEND HEADER_FILES ${HEADER_FILE})
         list(APPEND BFBS_FILES ${BFBS_FILE})
     endforeach()
@@ -56,7 +60,7 @@ function(flatc_generate_cpp)
     set(FLATC_GENERATED_BFBS ${FLATC_GENERATED_BFBS} PARENT_SCOPE)
 endfunction()
 
-function(_flatc_generate_single_cpp HEADER_FILE_OUT BFBS_FILE_OUT HEADER_FOLDER BFBS_FOLDER TMP_FOLDER INPUT_FILE)
+function(_flatc_generate_single_cpp HEADER_FILE_OUT BFBS_FILE_OUT INCLUDE_PATHS HEADER_FOLDER BFBS_FOLDER TMP_FOLDER INPUT_FILE)
     # get absolute fbs filename
     get_filename_component(INPUT_FILE_ABS ${INPUT_FILE} ABSOLUTE)
     
@@ -69,11 +73,15 @@ function(_flatc_generate_single_cpp HEADER_FILE_OUT BFBS_FILE_OUT HEADER_FOLDER 
     
     set(FINAL_GENERATED_HDR ${HEADER_FOLDER}/${FBS_FILE_WE}_generated.h)
     set(FINAL_GENERATED_BFBS ${BFBS_FOLDER}/${FBS_FILE_WE}.bfbs)
+
+    foreach(INCLUDE_PATH ${INCLUDE_PATHS})
+        set(INCLUDE_PATHS_CMD ${INCLUDE_PATHS_CMD} -I ${INCLUDE_PATH})
+    endforeach()
     
     # command to generate
     add_custom_command(
             OUTPUT "${FINAL_GENERATED_HDR}" "${FINAL_GENERATED_BFBS}"
-            COMMAND $<TARGET_FILE:flatbuffers::flatc> -b --schema --cpp --gen-object-api -o ${TMP_FOLDER} ${INPUT_FILE_ABS}
+            COMMAND $<TARGET_FILE:flatbuffers::flatc> -b --schema --cpp --gen-object-api ${INCLUDE_PATHS_CMD} -o ${TMP_FOLDER} ${INPUT_FILE_ABS}
             COMMAND ${CMAKE_COMMAND} -E make_directory ${HEADER_FOLDER} ${BFBS_FOLDER}
             COMMAND ${CMAKE_COMMAND} -E rename ${TMP_GENERATED_HDR} ${FINAL_GENERATED_HDR}
             COMMAND ${CMAKE_COMMAND} -E rename ${TMP_GENERATED_BFBS} ${FINAL_GENERATED_BFBS}
