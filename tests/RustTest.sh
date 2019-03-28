@@ -1,5 +1,5 @@
-#!/bin/bash 
-set -ex
+#!/bin/bash
+set -e
 #
 # Copyright 2018 Google Inc. All rights reserved.
 #
@@ -15,8 +15,14 @@ set -ex
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [[ "$1" == "mips-unknown-linux-gnu" ]]; then
+    TARGET_FLAG="--target mips-unknown-linux-gnu"
+    export CARGO_TARGET_MIPS_UNKNOWN_LINUX_GNU_LINKER=mips-linux-gnu-gcc
+    export CARGO_TARGET_MIPS_UNKNOWN_LINUX_GNU_RUNNER="qemu-mips -L /usr/mips-linux-gnu"
+fi
+
 cd ./rust_usage_test
-cargo test $1
+cargo test $TARGET_FLAG -- --quiet
 TEST_RESULT=$?
 if [[ $TEST_RESULT  == 0 ]]; then
     echo "OK: Rust tests passed."
@@ -25,4 +31,13 @@ else
     exit 1
 fi
 
-cargo bench
+cargo run $TARGET_FLAG --bin=alloc_check
+TEST_RESULT=$?
+if [[ $TEST_RESULT  == 0 ]]; then
+    echo "OK: Rust heap alloc test passed."
+else
+    echo "KO: Rust heap alloc test failed."
+    exit 1
+fi
+
+cargo bench $TARGET_FLAG

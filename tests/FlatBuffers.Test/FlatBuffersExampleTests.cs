@@ -97,7 +97,7 @@ namespace FlatBuffers.Test
             Monster.AddTest(fbb, mon2.Value);
             Monster.AddTest4(fbb, test4);
             Monster.AddTestarrayofstring(fbb, testArrayOfString);
-            Monster.AddTestbool(fbb, false);
+            Monster.AddTestbool(fbb, true);
             Monster.AddTestarrayoftables(fbb, sortMons);
             var mon = Monster.EndMonster(fbb);
 
@@ -246,7 +246,7 @@ namespace FlatBuffers.Test
             Assert.AreEqual("test1", monster.Testarrayofstring(0));
             Assert.AreEqual("test2", monster.Testarrayofstring(1));
 
-            Assert.AreEqual(false, monster.Testbool);
+            Assert.AreEqual(true, monster.Testbool);
 
 #if ENABLE_SPAN_T
             var nameBytes = monster.GetNameBytes();
@@ -258,7 +258,7 @@ namespace FlatBuffers.Test
             }
             else
             {
-                Assert.IsTrue(monster.GetTestarrayofboolsBytes().Length == 0);
+                Assert.IsTrue(monster.GetTestarrayofboolsBytes().Length != 0);
             }
 #else
             var nameBytes = monster.GetNameBytes().Value;
