@@ -15,11 +15,13 @@
  */
 
 #include "flatbuffers/code_generators.h"
+
 #include <assert.h>
-#include "flatbuffers/base.h"
-#include "flatbuffers/util.h"
 
 #include <cmath>
+
+#include "flatbuffers/base.h"
+#include "flatbuffers/util.h"
 
 #if defined(_MSC_VER)
 #  pragma warning(push)
@@ -28,7 +30,41 @@
 
 namespace flatbuffers {
 
+std::string JavaCSharpMakeRule(const bool java, const Parser &parser,
+                               const std::string &path,
+                               const std::string &file_name) {
+  const std::string file_extension = java ? ".java" : ".cs";
+  std::string make_rule;
+
+  for (auto it = parser.enums_.vec.begin(); it != parser.enums_.vec.end();
+       ++it) {
+    auto &enum_def = **it;
+    if (!make_rule.empty()) make_rule += " ";
+    std::string directory =
+        BaseGenerator::NamespaceDir(parser, path, *enum_def.defined_namespace);
+    make_rule += directory + enum_def.name + file_extension;
+  }
+
+  for (auto it = parser.structs_.vec.begin(); it != parser.structs_.vec.end();
+       ++it) {
+    auto &struct_def = **it;
+    if (!make_rule.empty()) make_rule += " ";
+    std::string directory = BaseGenerator::NamespaceDir(
+        parser, path, *struct_def.defined_namespace);
+    make_rule += directory + struct_def.name + file_extension;
+  }
+
+  make_rule += ": ";
+  auto included_files = parser.GetIncludedFilesRecursive(file_name);
+  for (auto it = included_files.begin(); it != included_files.end(); ++it) {
+    make_rule += " " + *it;
+  }
+  return make_rule;
+}
+
 void CodeWriter::operator+=(std::string text) {
+  if (!ignore_ident_ && !text.empty()) AppendIdent(stream_);
+
   while (true) {
     auto begin = text.find("{{");
     if (begin == std::string::npos) { break; }
@@ -56,11 +92,20 @@ void CodeWriter::operator+=(std::string text) {
     // Update the text to everything after the }}.
     text = text.substr(end + 2);
   }
-  if (!text.empty() && string_back(text) == '\\') {
+  if (!text.empty() && text.back() == '\\') {
     text.pop_back();
+    ignore_ident_ = true;
     stream_ << text;
   } else {
+    ignore_ident_ = false;
     stream_ << text << std::endl;
+  }
+}
+
+void CodeWriter::AppendIdent(std::stringstream &stream) {
+  int lvl = cur_ident_lvl_;
+  while (lvl--) {
+    stream.write(pad_.c_str(), static_cast<std::streamsize>(pad_.size()));
   }
 }
 
@@ -71,20 +116,24 @@ const char *BaseGenerator::FlatBuffersGeneratedWarning() {
 
 std::string BaseGenerator::NamespaceDir(const Parser &parser,
                                         const std::string &path,
-                                        const Namespace &ns) {
-  EnsureDirExists(path.c_str());
+                                        const Namespace &ns,
+                                        const bool dasherize) {
+  EnsureDirExists(path);
   if (parser.opts.one_file) return path;
   std::string namespace_dir = path;  // Either empty or ends in separator.
   auto &namespaces = ns.components;
   for (auto it = namespaces.begin(); it != namespaces.end(); ++it) {
-    namespace_dir += *it + kPathSeparator;
-    EnsureDirExists(namespace_dir.c_str());
+    namespace_dir +=
+        !dasherize ? *it : ConvertCase(*it, Case::kDasher, Case::kUpperCamel);
+    namespace_dir += kPathSeparator;
+    EnsureDirExists(namespace_dir);
   }
   return namespace_dir;
 }
 
-std::string BaseGenerator::NamespaceDir(const Namespace &ns) const {
-  return BaseGenerator::NamespaceDir(parser_, path_, ns);
+std::string BaseGenerator::NamespaceDir(const Namespace &ns,
+                                        const bool dasherize) const {
+  return BaseGenerator::NamespaceDir(parser_, path_, ns, dasherize);
 }
 
 std::string BaseGenerator::FullNamespace(const char *separator,
@@ -105,19 +154,18 @@ std::string BaseGenerator::LastNamespacePart(const Namespace &ns) {
     return std::string("");
 }
 
-// Ensure that a type is prefixed with its namespace whenever it is used
-// outside of its namespace.
+// Ensure that a type is prefixed with its namespace.
 std::string BaseGenerator::WrapInNameSpace(const Namespace *ns,
                                            const std::string &name) const {
-  if (CurrentNameSpace() == ns) return name;
   std::string qualified_name = qualifying_start_;
   for (auto it = ns->components.begin(); it != ns->components.end(); ++it)
     qualified_name += *it + qualifying_separator_;
   return qualified_name + name;
 }
 
-std::string BaseGenerator::WrapInNameSpace(const Definition &def) const {
-  return WrapInNameSpace(def.defined_namespace, def.name);
+std::string BaseGenerator::WrapInNameSpace(const Definition &def,
+                                           const std::string &suffix) const {
+  return WrapInNameSpace(def.defined_namespace, def.name + suffix);
 }
 
 std::string BaseGenerator::GetNameSpace(const Definition &def) const {
@@ -132,6 +180,14 @@ std::string BaseGenerator::GetNameSpace(const Definition &def) const {
   }
 
   return qualified_name;
+}
+
+std::string BaseGenerator::GeneratedFileName(const std::string &path,
+                                             const std::string &file_name,
+                                             const IDLOptions &options) const {
+  return path + file_name + options.filename_suffix + "." +
+         (options.filename_extension.empty() ? default_extension_
+                                             : options.filename_extension);
 }
 
 // Generate a documentation comment, if available.

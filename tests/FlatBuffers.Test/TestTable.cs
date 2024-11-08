@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace FlatBuffers.Test
+namespace Google.FlatBuffers.Test
 {
     /// <summary>
     /// A test Table object that gives easy access to the slot data
@@ -25,8 +25,7 @@ namespace FlatBuffers.Test
 
         public TestTable(ByteBuffer bb, int pos)
         {
-            t.bb = bb;
-            t.bb_pos = pos;
+          t = new Table(pos, bb);
         }
 
         public bool GetSlot(int slot, bool def)

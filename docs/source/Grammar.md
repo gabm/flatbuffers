@@ -10,11 +10,11 @@ include = `include` string\_constant `;`
 
 namespace\_decl = `namespace` ident ( `.` ident )* `;`
 
-attribute\_decl = `attribute` ident | `"`ident`"` `;`
+attribute\_decl = `attribute` ident | `"` ident `"` `;`
 
 type\_decl = ( `table` | `struct` ) ident metadata `{` field\_decl+ `}`
 
-enum\_decl = ( `enum` ident [ `:` type ] | `union` ident )  metadata `{`
+enum\_decl = ( `enum` ident `:` type | `union` ident )  metadata `{`
 commasep( enumval\_decl ) `}`
 
 root\_decl = `root_type` ident `;`
@@ -31,13 +31,13 @@ type = `bool` | `byte` | `ubyte` | `short` | `ushort` | `int` | `uint` |
 `float32` | `float64` |
 `string` | `[` type `]` | ident
 
-enumval\_decl = ident [ `=` integer\_constant ]
+enumval\_decl = ident [ `=` integer\_constant ] metadata
 
 metadata = [ `(` commasep( ident [ `:` single\_value ] ) `)` ]
 
-scalar = integer\_constant | float\_constant
+scalar = boolean\_constant | integer\_constant | float\_constant
 
-object = { commasep( ident `:` value ) }
+object = `{` commasep( ident `:` value ) `}`
 
 single\_value = scalar | string\_constant
 
@@ -69,6 +69,6 @@ hex\_float\_constant = `[-+]?0[xX](([.][:xdigit:]+)|([:xdigit:]+[.][:xdigit:]*)|
 
 special\_float\_constant = `[-+]?(nan|inf|infinity)`
 
-float\_constant = decimal\_float\_constant | hexadecimal\_float\_constant | special\_float\_constant
+float\_constant = dec\_float\_constant | hex\_float\_constant | special\_float\_constant
 
-boolean\_constant = `(true|false)` | (integer\_constant ? `true` : `false`)
+boolean\_constant = `true` | `false`
